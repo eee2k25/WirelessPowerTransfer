@@ -32,7 +32,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "export:web": "expo export -p web",
+    "export:pages": "BASE_URL=/WirelessPowerTransfer expo export -p web"
   },
   "private": true
 }

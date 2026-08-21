@@ -1,6 +1,8 @@
 {
-  "buildCommand": null,
+  "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "framework": null,
   "rewrites": [
     {
       "source": "/((?!_expo|assets|.*\\..*).*)",
