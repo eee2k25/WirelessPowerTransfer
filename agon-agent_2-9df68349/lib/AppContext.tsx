@@ -721,12 +721,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [openMatchedSession, peerDonor, pushNotice]);
 
   const connectRoom = useCallback(async (code?: string) => {
+    const role = settingsRef.current.role;
+    if (!role) throw new Error('Choose a vehicle role first');
     const profile = {
       id: settingsRef.current.vehicleId,
       name: settingsRef.current.vehicleName || `${settingsRef.current.role ?? 'Vehicle'} EV`,
-      role: settingsRef.current.role,
+      role,
     };
-    if (!profile.role) throw new Error('Choose a vehicle role first');
     try {
       await room.connect(code, profile);
       pushLog(`Live room connected · ${room.getCode()}`);
