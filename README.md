@@ -1,28 +1,30 @@
 # V2V PowerShare (Wireless Power Transfer)
 
-Expo app for campus vehicle-to-vehicle wireless power sharing. Live site:
+Expo app for campus vehicle-to-vehicle wireless power sharing.
 
-**https://eee2k25.github.io/WirelessPowerTransfer/**
+**Live site: https://eee2k25.github.io/WirelessPowerTransfer/**
 
-## Why GitHub Pages looked broken
+## Why GitHub Pages looked empty
 
-Pages was publishing the **repo root** (`README.md` + source), not a built website. This is an Expo app, so it has to be exported first (`npx expo export -p web`). Assets also live under `_expo/…`, which Jekyll would skip unless `.nojekyll` is present.
+Pages was publishing the **repo root** (this README), not a built website. This is an Expo app, so it must be exported first. GitHub also ignores folders like `_expo/` unless `.nojekyll` is present.
 
-GitHub Actions now builds the app in `agon-agent_2-9df68349/` and deploys the `dist/` folder to Pages.
+The production web build is committed in `docs/` and GitHub Pages is set to serve that folder.
 
 ## Local web
 
 ```bash
 cd agon-agent_2-9df68349
-npm ci
+npm ci --legacy-peer-deps
 npm run web
 ```
 
-Production export (without the GitHub Pages subpath):
+## Rebuild the GitHub Pages site
 
 ```bash
 cd agon-agent_2-9df68349
-npm ci
-npm run export:web
-npx serve dist
+npm ci --legacy-peer-deps
+BASE_URL=/WirelessPowerTransfer npx expo export -p web
+rm -rf ../docs && mkdir ../docs && cp -a dist/. ../docs/
+cp ../docs/index.html ../docs/404.html
+touch ../docs/.nojekyll
 ```
