@@ -69,4 +69,4 @@ wss.on('connection', (socket) => {
   });
 });
 
-server.listen(port, () => console.log(`V2V room relay listening on ws://localhost:${port}`));
+server.listen(port, '0.0.0.0', () => console.log(`V2V room relay listening on ws://0.0.0.0:${port}`));

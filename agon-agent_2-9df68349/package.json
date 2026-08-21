@@ -36,7 +36,7 @@
     "dev": "concurrently \"npm run room-server\" \"npm run web\"",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "expo start --web --lan",
     "export:web": "expo export -p web",
     "export:pages": "BASE_URL=/WirelessPowerTransfer expo export -p web"
   },
