@@ -26,6 +26,7 @@ import {
 import { ThemeColors, colors as darkColors, lightColors } from './theme';
 import { loadHistory, loadSettings, saveHistory, saveSettings } from './storage';
 import { esp32 } from './esp32';
+import { room, RoomPeer, RoomStatus } from './room';
 import { DEMO_DONORS, clamp, frameFromTelemetry, nextDemoTelemetry } from './demo';
 import {
   DEMO_PEER_XY,
@@ -138,6 +139,11 @@ interface AppCtx {
   notices: AppNotice[];
   dismissNotice: (id: string) => void;
   clearNotices: () => void;
+  roomStatus: RoomStatus;
+  roomCode: string | null;
+  roomPeer: RoomPeer | null;
+  connectRoom: (code?: string) => Promise<void>;
+  leaveRoom: () => void;
 }
 
 const Ctx = createContext<AppCtx | null>(null);
@@ -162,6 +168,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [peerXY, setPeerXY] = useState<LocalXY | null>(null);
   const [proximity, setProximity] = useState<ProximityInfo | null>(null);
   const [notices, setNotices] = useState<AppNotice[]>([]);
+  const [roomStatus, setRoomStatus] = useState<RoomStatus>('disconnected');
+  const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [roomPeer, setRoomPeer] = useState<RoomPeer | null>(null);
 
   const settingsRef = useRef(settings);
   const telemetryRef = useRef(telemetry);
@@ -358,6 +367,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       if (s.demoMode || active) {
         esp32.ingestRaw(frameFromTelemetry(next));
+        if (roomStatus === 'connected' && active && s.role === 'DONOR') room.send('room-telemetry', next);
       }
       if (active) {
         const dtH = TICK_MS / 3600000;
@@ -387,7 +397,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }, TICK_MS);
     return () => clearInterval(timer);
-  }, [finalizeSession]);
+  }, [finalizeSession, roomStatus]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', () => undefined);
@@ -564,8 +574,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         requestId: req.id,
       });
       esp32.send('GET_STATUS').catch(() => undefined);
+      if (roomStatus === 'connected') room.send('room-request', req);
       if (acceptTimer.current) clearTimeout(acceptTimer.current);
-      if (settingsRef.current.demoMode) {
+      if (settingsRef.current.demoMode && roomStatus !== 'connected') {
         acceptTimer.current = setTimeout(() => {
           setOutgoing((o) => (o ? { ...o, status: 'accepted' } : o));
           const checks = buildChecks(settingsRef.current, esp32.getStatus() === 'connected');
@@ -602,7 +613,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }, 1800);
       }
     },
-    [pushLog, pushNotice],
+    [pushLog, pushNotice, roomStatus],
   );
 
   const cancelRequest = useCallback(() => {
@@ -648,6 +659,87 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const peerDonor = useCallback((peer: RoomPeer): NearbyDonor => ({
+    ...DEMO_DONORS[0],
+    id: peer.id,
+    name: peer.name,
+    status: 'available',
+  }), []);
+
+  useEffect(() => {
+    const offStatus = room.onStatus((status, detail) => {
+      setRoomStatus(status);
+      if (status === 'connected') setRoomCode(detail ?? room.getCode());
+      if (status === 'disconnected') {
+        setRoomCode(null);
+        setRoomPeer(null);
+      }
+    });
+    const offMessage = room.onMessage((message) => {
+      const peer = message.from as RoomPeer | undefined;
+      if (message.type === 'peer-joined' && peer) {
+        setRoomPeer(peer);
+        if (settingsRef.current.role === 'RECEIVER') setDonors([peerDonor(peer)]);
+      }
+      if (message.type === 'joined') {
+        const joinedPeer = message.peers?.[0] as RoomPeer | undefined;
+        if (joinedPeer) {
+          setRoomPeer(joinedPeer);
+          if (settingsRef.current.role === 'RECEIVER') setDonors([peerDonor(joinedPeer)]);
+        }
+      }
+      if (message.type === 'peer-left') {
+        setRoomPeer(null);
+        if (settingsRef.current.role === 'RECEIVER') setDonors([]);
+      }
+      if (message.type === 'room-request' && settingsRef.current.role === 'DONOR' && message.payload) {
+        const request = message.payload as PowerRequest;
+        setIncoming([request]);
+        setPeerXY(DEMO_PEER_XY[request.receiverId] ?? { x: 40, y: 70 });
+        pushNotice({ kind: 'request', title: 'Live room request', body: `${request.receiverName} · ${request.requestedPower} W`, requestId: request.id });
+      }
+      if (message.type === 'room-accept' && settingsRef.current.role === 'RECEIVER' && message.payload) {
+        const request = message.payload as PowerRequest;
+        setOutgoing((current) => (current?.id === request.id ? { ...current, status: 'accepted' } : current));
+        openMatchedSession(request);
+      }
+      if (message.type === 'room-check') {
+        setSession((current) => (current ? { ...current, status: 'ready' } : current));
+        setWpt('ready');
+      }
+      if (message.type === 'room-wpt' && message.payload) {
+        const state = message.payload as { state: WptState; startTime?: number };
+        setWpt(state.state);
+        setSession((current) => (current ? { ...current, status: state.state === 'active' ? 'active' : current.status, startTime: state.startTime ?? current.startTime } : current));
+      }
+      if (message.type === 'room-telemetry' && message.payload) setTelemetry(message.payload as Telemetry);
+    });
+    return () => {
+      offStatus();
+      offMessage();
+    };
+  }, [openMatchedSession, peerDonor, pushNotice]);
+
+  const connectRoom = useCallback(async (code?: string) => {
+    const profile = {
+      id: settingsRef.current.vehicleId,
+      name: settingsRef.current.vehicleName || `${settingsRef.current.role ?? 'Vehicle'} EV`,
+      role: settingsRef.current.role,
+    };
+    if (!profile.role) throw new Error('Choose a vehicle role first');
+    try {
+      await room.connect(code, profile);
+      pushLog(`Live room connected · ${room.getCode()}`);
+    } catch (error) {
+      pushLog(`Live room failed · ${String(error)}`);
+    }
+  }, [pushLog]);
+
+  const leaveRoom = useCallback(() => {
+    room.disconnect();
+    pushLog('Live room disconnected');
+  }, [pushLog]);
+
   const acceptRequest = useCallback(
     (id: string) => {
       const req = incoming.find((r) => r.id === id);
@@ -666,8 +758,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         requestId: req.id,
       });
       openMatchedSession(req);
+      if (roomStatus === 'connected') room.send('room-accept', req);
     },
-    [incoming, openMatchedSession, pushLog, pushNotice],
+    [incoming, openMatchedSession, pushLog, pushNotice, roomStatus],
   );
 
   const rejectRequest = useCallback(
@@ -684,7 +777,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSession((s) => (s ? { ...s, checks, status: 'ready' } : s));
     setWpt('ready');
     pushLog('SYSTEM READY · all checks passed');
-  }, [pushLog]);
+    if (roomStatus === 'connected') room.send('room-check');
+  }, [pushLog, roomStatus]);
 
   const startWpt = useCallback(async () => {
     await esp32.send('START_WPT');
@@ -692,14 +786,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setWpt('active');
     setPoints([]);
     pushLog('WPT START · ZVS inverter + RIC coils energized');
-  }, [pushLog]);
+    if (roomStatus === 'connected') room.send('room-wpt', { state: 'active', startTime: Date.now() });
+  }, [pushLog, roomStatus]);
 
   const stopWpt = useCallback(async () => {
     await esp32.send('STOP_WPT');
     setWpt('completed');
     finalizeSession('Stopped');
     pushLog('WPT STOP');
-  }, [finalizeSession, pushLog]);
+    if (roomStatus === 'connected') room.send('room-wpt', { state: 'completed' });
+  }, [finalizeSession, pushLog, roomStatus]);
 
   const emergencyStop = useCallback(async () => {
     await esp32.send('EMERGENCY_STOP');
@@ -707,7 +803,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setWpt('emergency');
     finalizeSession('Emergency Stop');
     pushLog('EMERGENCY STOP issued');
-  }, [finalizeSession, pushLog]);
+    if (roomStatus === 'connected') room.send('room-wpt', { state: 'emergency' });
+  }, [finalizeSession, pushLog, roomStatus]);
 
   const injectFault = useCallback(
     (code: string) => {
@@ -789,6 +886,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notices,
       dismissNotice: (id: string) => setNotices((rows) => rows.filter((n) => n.id !== id)),
       clearNotices: () => setNotices([]),
+      roomStatus,
+      roomCode,
+      roomPeer,
+      connectRoom,
+      leaveRoom,
     }),
     [
       ready,
@@ -828,6 +930,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       peerXY,
       proximity,
       notices,
+      roomStatus,
+      roomCode,
+      roomPeer,
+      connectRoom,
+      leaveRoom,
     ],
   );
 

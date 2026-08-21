@@ -23,6 +23,9 @@ export default function HomeScreen() {
     proximity,
     selfFix,
     notices,
+    roomStatus,
+    roomCode,
+    roomPeer,
   } = useApp();
   const role = settings.role;
   const soc = role === 'DONOR' ? telemetry.socD : telemetry.socR;
@@ -53,6 +56,16 @@ export default function HomeScreen() {
           donorOnline={donorOnline}
           fault={telemetry.fault}
         />
+
+        <Card theme={theme} accent={roomStatus === 'connected' ? theme.green : theme.cyan} style={{ marginBottom: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: theme.text, fontWeight: '800' }}>LIVE ROOM</Text>
+            <Chip theme={theme} tone={roomStatus === 'connected' ? 'ok' : 'idle'} label={roomStatus === 'connected' ? 'CONNECTED' : 'OFFLINE'} />
+          </View>
+          <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 5 }}>
+            {roomStatus === 'connected' ? `${roomCode} · ${roomPeer ? `${roomPeer.name} connected` : 'waiting for peer'}` : 'Open Find to create or join a room'}
+          </Text>
+        </Card>
 
         <Card theme={theme} accent={theme.blue} style={{ marginBottom: 10 }}>
           <Text style={[styles.mini, { color: theme.textDim }]}>LOCATION FOR NOTIFY ONLY</Text>

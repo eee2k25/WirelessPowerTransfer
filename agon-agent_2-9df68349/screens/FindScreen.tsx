@@ -32,11 +32,17 @@ export default function FindScreen() {
     rejectRequest,
     telemetry,
     session,
+    roomStatus,
+    roomCode,
+    roomPeer,
+    connectRoom,
+    leaveRoom,
   } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [picked, setPicked] = useState<NearbyDonor | null>(null);
   const [power, setPower] = useState('12');
   const [mins, setMins] = useState('30');
+  const [roomInput, setRoomInput] = useState('');
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -51,6 +57,7 @@ export default function FindScreen() {
           <Text style={[styles.h1, { color: theme.text }]}>Incoming Requests</Text>
           <Text style={[styles.sub, { color: theme.textMuted }]}>Receivers asking this Donor EV for WPT</Text>
         </View>
+        <RoomPanel theme={theme} status={roomStatus} code={roomCode} peer={roomPeer} input={roomInput} onInput={setRoomInput} onConnect={() => connectRoom(roomInput)} onLeave={leaveRoom} />
         <FlatList
           data={incoming}
           keyExtractor={(i) => i.id}
@@ -102,6 +109,7 @@ export default function FindScreen() {
         </View>
         <Chip theme={theme} tone="info" icon="navigate" label={`${donors.length} found`} />
       </View>
+      <RoomPanel theme={theme} status={roomStatus} code={roomCode} peer={roomPeer} input={roomInput} onInput={setRoomInput} onConnect={() => connectRoom(roomInput)} onLeave={leaveRoom} />
 
       {outgoing && outgoing.status === 'pending' ? (
         <Card theme={theme} accent={theme.cyan} style={{ marginHorizontal: 16, marginBottom: 8 }}>
@@ -219,6 +227,57 @@ function Meta({ icon, text, theme }: { icon: keyof typeof Ionicons.glyphMap; tex
       <Ionicons name={icon} size={13} color={theme.textMuted} />
       <Text style={{ color: theme.textMuted, fontSize: 12, fontWeight: '700' }}>{text}</Text>
     </View>
+  );
+}
+
+function RoomPanel({
+  theme,
+  status,
+  code,
+  peer,
+  input,
+  onInput,
+  onConnect,
+  onLeave,
+}: {
+  theme: any;
+  status: string;
+  code: string | null;
+  peer: { name: string; role: string } | null;
+  input: string;
+  onInput: (value: string) => void;
+  onConnect: () => void;
+  onLeave: () => void;
+}) {
+  const connected = status === 'connected';
+  return (
+    <Card theme={theme} accent={connected ? theme.green : theme.cyan} style={{ marginHorizontal: 16, marginBottom: 10 }}>
+      <View style={styles.rowBetween}>
+        <Text style={{ color: theme.text, fontWeight: '800' }}>LIVE ROOM</Text>
+        <Chip theme={theme} tone={connected ? 'ok' : status === 'error' ? 'fault' : 'info'} label={connected ? 'CONNECTED' : status.toUpperCase()} />
+      </View>
+      {connected ? (
+        <>
+          <Text style={{ color: theme.textMuted, marginTop: 6, fontSize: 12 }}>Share this code with the other browser</Text>
+          <Text selectable style={{ color: theme.cyan, fontSize: 28, fontWeight: '900', letterSpacing: 4, marginTop: 2 }}>{code ?? '------'}</Text>
+          <Text style={{ color: peer ? theme.green : theme.textMuted, fontSize: 12, marginTop: 4 }}>{peer ? `${peer.name} · ${peer.role}` : 'Waiting for the second vehicle...'}</Text>
+          <Btn theme={theme} title="LEAVE ROOM" icon="log-out" variant="ghost" style={{ marginTop: 10 }} onPress={onLeave} />
+        </>
+      ) : (
+        <>
+          <Text style={{ color: theme.textMuted, marginTop: 6, fontSize: 12 }}>Create a room or enter a friend&apos;s six-character code.</Text>
+          <TextInput
+            value={input}
+            onChangeText={(value) => onInput(value.toUpperCase().replace(/[^A-Z2-9]/g, '').slice(0, 6))}
+            autoCapitalize="characters"
+            placeholder="ROOM CODE (optional to create)"
+            placeholderTextColor={theme.textDim}
+            style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.bg, marginTop: 8 }]}
+          />
+          <Btn theme={theme} title={input ? 'JOIN ROOM' : 'CREATE ROOM'} icon="git-network" onPress={onConnect} />
+        </>
+      )}
+    </Card>
   );
 }
 
