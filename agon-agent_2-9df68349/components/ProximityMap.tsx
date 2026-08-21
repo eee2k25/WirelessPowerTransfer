@@ -51,16 +51,16 @@ export function ProximityMap({
         })}
         {peerPx ? (
           <View style={[styles.dotWrap, { left: peerPx.left, top: peerPx.top }]}>
-            <View style={[styles.dot, { backgroundColor: theme.amber, shadowColor: theme.amber }]} />
+            <View style={[styles.dot, { backgroundColor: theme.amber, shadowColor: theme.amber, borderColor: theme.bg }]} />
           </View>
         ) : null}
         <View style={[styles.dotWrap, { left: selfPx.left, top: selfPx.top }]}>
-          <View style={[styles.dot, { backgroundColor: theme.cyan, width: 14, height: 14, borderRadius: 7 }]} />
+          <View style={[styles.dot, { backgroundColor: theme.cyan, width: 14, height: 14, borderRadius: 7, borderColor: theme.bg }]} />
         </View>
       </View>
       <View style={styles.legend}>
-        <Legend color={theme.cyan} label={`You · ${self.zone}`} />
-        <Legend color={theme.amber} label={peer ? peerLabel : 'No peer ping'} />
+        <Legend theme={theme} color={theme.cyan} label={`You · ${self.zone}`} />
+        <Legend theme={theme} color={theme.amber} label={peer ? peerLabel : 'No peer ping'} />
       </View>
       {proximity ? (
         <View style={styles.stats}>
@@ -82,11 +82,11 @@ export function ProximityMap({
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function Legend({ theme, color, label }: { theme: ThemeColors; color: string; label: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-      <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>{label}</Text>
+      <Text style={{ color: theme.textDim, fontSize: 11, fontWeight: '700' }}>{label}</Text>
     </View>
   );
 }
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   zone: { position: 'absolute', width: 6, height: 6, borderRadius: 3, opacity: 0.55 },
   dotWrap: { position: 'absolute', width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#071018' },
+  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
   legend: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   stats: { flexDirection: 'row', gap: 8, marginTop: 10 },
 });

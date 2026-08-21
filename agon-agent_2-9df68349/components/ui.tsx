@@ -121,7 +121,7 @@ export function Btn({
           : variant === 'blue'
             ? theme.blue
             : 'transparent';
-  const fg = variant === 'ghost' ? theme.text : '#071018';
+  const fg = variant === 'ghost' ? theme.text : theme.onAccent;
   const ghostFg = variant === 'ghost' ? theme.text : fg;
   return (
     <Pressable
@@ -138,7 +138,7 @@ export function Btn({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'ghost' ? theme.text : '#071018'} />
+        <ActivityIndicator color={variant === 'ghost' ? theme.text : theme.onAccent} />
       ) : (
         <>
           {icon ? <Ionicons name={icon} size={16} color={variant === 'ghost' ? theme.text : ghostFg} /> : null}

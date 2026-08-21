@@ -181,7 +181,7 @@ If the phone dies, disconnects, or crashes mid-transfer, the hardware watchdog i
 | **Track** | Privacy proximity map, live request ping, "how the donor is notified" explainer, notification inbox |
 | **Session** | The core: donor↔receiver header, system-check list, animated power-flow graphic, live V/I/P/temp/efficiency graphs, **START / STOP / EMERGENCY STOP** |
 | **History** | Completed sessions with energy transferred, duration, average efficiency, fault count; tap for a detail sheet |
-| **Settings** | Vehicle profile, role switch, ESP32 connect/disconnect, location & notify options, safety limits, dark/light, units, demo mode |
+| **Settings** | Vehicle profile, role switch, ESP32 connect/disconnect, Appearance theme picker (Dark / Day), location & notify options, safety limits, units, demo mode |
 
 ### Demo walkthrough (2 minutes)
 
@@ -200,7 +200,7 @@ If the phone dies, disconnects, or crashes mid-transfer, the hardware watchdog i
 - **React Navigation 7** — native stack + bottom tabs with live badges
 - **react-native-svg** + **Reanimated 4** — battery ring, power-flow animation, live graphs
 - **AsyncStorage** — settings, role and session history persistence
-- **expo-linear-gradient**, **@expo/vector-icons** — the dark instrument-panel look (`#070B14` base, cyan `#00E5C3`, amber `#F5B942`)
+- **expo-linear-gradient**, **@expo/vector-icons** — a themeable instrument-panel UI with both the original dark palette and a warm Day palette
 
 ---
 
@@ -219,7 +219,7 @@ If the phone dies, disconnects, or crashes mid-transfer, the hardware watchdog i
 │       ├── demo.ts            # synthetic donors and telemetry generator
 │       ├── location.ts        # privacy proximity: zones, bearings, range gates
 │       ├── types.ts           # Telemetry, Session, Settings, defaults
-│       └── theme.ts           # dark + light palettes, spacing
+│       └── theme.ts           # Dark / Day palettes, splash gradients, spacing
 ├── docs/                      # committed web export served by GitHub Pages
 ├── media/                     # README artwork
 └── index.html                 # root redirect for the Pages site

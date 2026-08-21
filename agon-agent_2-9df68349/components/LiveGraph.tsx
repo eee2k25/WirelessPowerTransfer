@@ -54,7 +54,7 @@ export function LiveGraph({
               onPress={() => onWindow(m)}
               style={[styles.win, { backgroundColor: windowMin === m ? color : theme.cardAlt, borderColor: theme.border }]}
             >
-              <Text style={{ color: windowMin === m ? '#071018' : theme.textMuted, fontSize: 10, fontWeight: '800' }}>
+              <Text style={{ color: windowMin === m ? theme.onAccent : theme.textMuted, fontSize: 10, fontWeight: '800' }}>
                 {m}m
               </Text>
             </Pressable>

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useApp } from '../lib/AppContext';
 import { BatteryRing } from '../components/BatteryRing';
 import { Btn, Card, Chip, Metric, SectionTitle } from '../components/ui';
@@ -12,6 +13,8 @@ export default function HomeScreen() {
   const nav = useNavigation<any>();
   const {
     theme,
+    themeMode,
+    toggleTheme,
     settings,
     telemetry,
     linkStatus,
@@ -41,7 +44,23 @@ export default function HomeScreen() {
             <Text style={[styles.h1, { color: theme.text }]}>{settings.vehicleName}</Text>
             <Text style={[styles.id, { color: theme.textMuted }]}>{settings.vehicleId}</Text>
           </View>
-          {settings.demoMode ? <Chip theme={theme} tone="warn" icon="beaker" label="DEMO MODE" /> : null}
+          <View style={styles.headActions}>
+            {settings.demoMode ? <Chip theme={theme} tone="warn" icon="beaker" label="DEMO MODE" /> : null}
+            <Pressable
+              onPress={toggleTheme}
+              style={({ pressed }) => [
+                styles.themePill,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.borderStrong,
+                  opacity: pressed ? 0.82 : 1,
+                },
+              ]}
+            >
+              <Ionicons name={themeMode === 'dark' ? 'moon' : 'sunny'} size={14} color={theme.cyan} />
+              <Text style={[styles.themePillText, { color: theme.text }]}>{themeMode.toUpperCase()}</Text>
+            </Pressable>
+          </View>
         </View>
 
         <StatusStrip
@@ -170,9 +189,20 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   pad: { padding: 16, paddingBottom: 40 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  headActions: { alignItems: 'flex-end', gap: 8 },
   kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.4 },
   h1: { fontSize: 22, fontWeight: '800', marginTop: 2 },
   id: { fontSize: 12, marginTop: 2 },
+  themePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  themePillText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   hero: { flexDirection: 'row', gap: 16, alignItems: 'center' },
   grid: { flexDirection: 'row', gap: 10, marginTop: 10 },
   mini: { fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },

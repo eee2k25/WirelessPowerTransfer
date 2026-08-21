@@ -131,7 +131,7 @@ export default function SessionScreen() {
 
         <SectionTitle theme={theme} title="Live INA219" hint={wpt === 'active' ? `${formatDuration(elapsed)}` : 'idle'} />
         <Card theme={theme} accent={theme.amber}>
-          <Text style={styles.blockLab}>DONOR EV</Text>
+          <Text style={[styles.blockLab, { color: theme.textDim }]}>DONOR EV</Text>
           <View style={styles.metrics}>
             <Metric theme={theme} label="Voltage" value={telemetry.donorV.toFixed(2)} unit="V" />
             <Metric theme={theme} label="Current" value={telemetry.donorI.toFixed(2)} unit="A" />
@@ -144,7 +144,7 @@ export default function SessionScreen() {
           </View>
         </Card>
         <Card theme={theme} accent={theme.cyan} style={{ marginTop: 10 }}>
-          <Text style={styles.blockLab}>WIRELESS TRANSFER</Text>
+          <Text style={[styles.blockLab, { color: theme.textDim }]}>WIRELESS TRANSFER</Text>
           <View style={styles.metrics}>
             <Metric theme={theme} label="Tx V" value={telemetry.txV.toFixed(2)} unit="V" color={theme.cyan} />
             <Metric theme={theme} label="Rx V" value={telemetry.rxV.toFixed(2)} unit="V" />
@@ -157,7 +157,7 @@ export default function SessionScreen() {
           </View>
         </Card>
         <Card theme={theme} accent={theme.blue} style={{ marginTop: 10 }}>
-          <Text style={styles.blockLab}>RECEIVER EV</Text>
+          <Text style={[styles.blockLab, { color: theme.textDim }]}>RECEIVER EV</Text>
           <View style={styles.metrics}>
             <Metric theme={theme} label="Voltage" value={telemetry.rxV.toFixed(2)} unit="V" />
             <Metric theme={theme} label="Charge I" value={telemetry.rxI.toFixed(2)} unit="A" />
@@ -178,7 +178,7 @@ export default function SessionScreen() {
               onPress={() => setGraph(k)}
               style={[styles.tab, { backgroundColor: graph === k ? theme.cyan : theme.card, borderColor: theme.border }]}
             >
-              <Text style={{ color: graph === k ? '#071018' : theme.textMuted, fontWeight: '800', fontSize: 12 }}>
+              <Text style={{ color: graph === k ? theme.onAccent : theme.textMuted, fontWeight: '800', fontSize: 12 }}>
                 {k === 'v' ? 'Voltage' : k === 'i' ? 'Current' : k === 'p' ? 'Power' : 'Eff'}
               </Text>
             </Pressable>
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   h1: { fontSize: 22, fontWeight: '800' },
   check: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
-  blockLab: { fontSize: 11, fontWeight: '800', letterSpacing: 1, color: '#94A3B8', marginBottom: 8 },
+  blockLab: { fontSize: 11, fontWeight: '800', letterSpacing: 1, marginBottom: 8 },
   metrics: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 1 },

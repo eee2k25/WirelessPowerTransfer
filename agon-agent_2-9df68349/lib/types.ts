@@ -1,3 +1,5 @@
+import { ThemeMode } from './theme';
+
 export type VehicleRole = 'DONOR' | 'RECEIVER';
 
 export type LinkStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
@@ -159,6 +161,7 @@ export interface AppSettings {
   minDonorBattery: number;
   lowReceiverBattery: number;
   notifications: boolean;
+  themeMode: ThemeMode;
   darkMode: boolean;
   units: 'metric' | 'imperial';
   demoMode: boolean;
@@ -182,6 +185,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   minDonorBattery: 40,
   lowReceiverBattery: 25,
   notifications: true,
+  themeMode: 'dark',
   darkMode: true,
   units: 'metric',
   demoMode: true,
@@ -191,6 +195,27 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifyRadius: 250,
   hideExactLocation: true,
 };
+
+export function normalizeSettings(
+  input?: Partial<AppSettings> & {
+    themeMode?: ThemeMode | null;
+    darkMode?: boolean | null;
+  },
+): AppSettings {
+  const themeMode =
+    input?.themeMode === 'day' || input?.themeMode === 'dark'
+      ? input.themeMode
+      : input?.darkMode === false
+        ? 'day'
+        : DEFAULT_SETTINGS.themeMode;
+
+  return {
+    ...DEFAULT_SETTINGS,
+    ...input,
+    themeMode,
+    darkMode: themeMode === 'dark',
+  };
+}
 
 export const EMPTY_TELEMETRY: Telemetry = {
   donorV: 12.40,

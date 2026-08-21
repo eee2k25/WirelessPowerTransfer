@@ -22,8 +22,9 @@ import {
   V2VSession,
   VehicleRole,
   WptState,
+  normalizeSettings,
 } from './types';
-import { ThemeColors, colors as darkColors, lightColors } from './theme';
+import { ThemeColors, ThemeMode, themeFor } from './theme';
 import { loadHistory, loadSettings, saveHistory, saveSettings } from './storage';
 import { esp32 } from './esp32';
 import { DEMO_DONORS, clamp, frameFromTelemetry, nextDemoTelemetry } from './demo';
@@ -98,6 +99,9 @@ function buildChecks(settings: AppSettings, linked: boolean): CheckItem[] {
 interface AppCtx {
   ready: boolean;
   theme: ThemeColors;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
+  toggleTheme: () => void;
   dark: boolean;
   settings: AppSettings;
   updateSettings: (p: Partial<AppSettings>) => void;
@@ -245,11 +249,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [pushLog]);
 
   const persistSettings = useCallback((next: AppSettings) => {
-    setSettings(next);
-    saveSettings(next).catch(() => undefined);
-    esp32.setDemoMode(next.demoMode);
-    locationService.setTracking(next.locationTracking);
-    if (next.locationTracking) locationService.startDeviceIfAvailable();
+    const normalized = normalizeSettings(next);
+    setSettings(normalized);
+    saveSettings(normalized).catch(() => undefined);
+    esp32.setDemoMode(normalized.demoMode);
+    locationService.setTracking(normalized.locationTracking);
+    if (normalized.locationTracking) locationService.startDeviceIfAvailable();
     else locationService.stopDevice();
   }, []);
 
@@ -259,6 +264,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [persistSettings],
   );
+
+  const setThemeMode = useCallback(
+    (themeMode: ThemeMode) => {
+      persistSettings({ ...settingsRef.current, themeMode, darkMode: themeMode === 'dark' });
+    },
+    [persistSettings],
+  );
+
+  const toggleTheme = useCallback(() => {
+    setThemeMode(settingsRef.current.themeMode === 'dark' ? 'day' : 'dark');
+  }, [setThemeMode]);
 
   const setRole = useCallback(
     (r: VehicleRole) => {
@@ -736,13 +752,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveHistory([]).catch(() => undefined);
   }, []);
 
-  const dark = settings.darkMode;
-  const theme = dark ? darkColors : lightColors;
+  const themeMode = settings.themeMode;
+  const dark = themeMode === 'dark';
+  const theme = themeFor(themeMode);
 
   const value = useMemo<AppCtx>(
     () => ({
       ready,
       theme,
+      themeMode,
+      setThemeMode,
+      toggleTheme,
       dark,
       settings,
       updateSettings,
@@ -793,6 +813,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [
       ready,
       theme,
+      themeMode,
+      setThemeMode,
+      toggleTheme,
       dark,
       settings,
       updateSettings,

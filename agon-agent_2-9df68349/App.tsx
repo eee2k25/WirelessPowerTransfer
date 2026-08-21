@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -55,9 +55,21 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Find" component={FindScreen} options={{ tabBarBadge: findBadge, tabBarBadgeStyle: { backgroundColor: theme.amber, color: '#071018', fontSize: 11 } }} />
-      <Tab.Screen name="Track" component={TrackScreen} options={{ tabBarBadge: trackBadge, tabBarBadgeStyle: { backgroundColor: theme.cyan, color: '#071018', fontSize: 11 } }} />
-      <Tab.Screen name="Session" component={SessionScreen} options={{ tabBarBadge: sessionBadge, tabBarBadgeStyle: { backgroundColor: theme.cyan, color: '#071018', fontSize: 10, minWidth: 16 } }} />
+      <Tab.Screen
+        name="Find"
+        component={FindScreen}
+        options={{ tabBarBadge: findBadge, tabBarBadgeStyle: { backgroundColor: theme.amber, color: theme.onAccent, fontSize: 11 } }}
+      />
+      <Tab.Screen
+        name="Track"
+        component={TrackScreen}
+        options={{ tabBarBadge: trackBadge, tabBarBadgeStyle: { backgroundColor: theme.cyan, color: theme.onAccent, fontSize: 11 } }}
+      />
+      <Tab.Screen
+        name="Session"
+        component={SessionScreen}
+        options={{ tabBarBadge: sessionBadge, tabBarBadgeStyle: { backgroundColor: theme.cyan, color: theme.onAccent, fontSize: 10, minWidth: 16 } }}
+      />
       <Tab.Screen name="History" component={HistoryScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
@@ -80,9 +92,9 @@ function AlertHost() {
           },
         ]}
       >
-        <Ionicons name={emergency ? 'warning' : 'notifications'} size={18} color={emergency ? '#fff' : theme.amber} />
-        <Text style={{ color: emergency ? '#fff' : theme.text, flex: 1, fontWeight: '700', fontSize: 13 }}>{alert}</Text>
-        <Ionicons name="close" size={16} color={emergency ? '#fff' : theme.textMuted} />
+        <Ionicons name={emergency ? 'warning' : 'notifications'} size={18} color={emergency ? theme.onAccent : theme.amber} />
+        <Text style={{ color: emergency ? theme.onAccent : theme.text, flex: 1, fontWeight: '700', fontSize: 13 }}>{alert}</Text>
+        <Ionicons name="close" size={16} color={emergency ? theme.onAccent : theme.textMuted} />
       </Pressable>
     </View>
   );
@@ -120,14 +132,23 @@ function RootNav() {
   );
 }
 
+function AppShell() {
+  const { dark } = useApp();
+  return (
+    <>
+      <StatusBar style={dark ? 'light' : 'dark'} />
+      <RootNav />
+    </>
+  );
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({ ...Ionicons.font });
   if (!fontsLoaded) return null;
   return (
     <SafeAreaProvider>
       <AppProvider>
-        <StatusBar style="light" />
-        <RootNav />
+        <AppShell />
       </AppProvider>
     </SafeAreaProvider>
   );
