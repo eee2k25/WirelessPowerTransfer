@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Agon Preview",
+    "name": "V2V PowerShare",
     "slug": "agon-preview",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "extra": {
       "eas": {
