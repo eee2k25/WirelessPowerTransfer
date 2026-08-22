@@ -28,9 +28,10 @@ function defaultUrl() {
   if (configured) return configured;
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    return `${protocol}://${window.location.hostname}:8787`;
+    // WebSocket is on the same host, path /ws
+    return `${protocol}://${window.location.host}/ws`;
   }
-  return 'ws://localhost:8787';
+  return 'ws://localhost:8081/ws';
 }
 
 class RoomService {

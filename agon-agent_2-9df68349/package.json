@@ -38,7 +38,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web --lan",
     "export:web": "expo export -p web",
-    "export:pages": "BASE_URL=/WirelessPowerTransfer expo export -p web"
+    "export:pages": "BASE_URL=/WirelessPowerTransfer expo export -p web",
+    "server": "node server-combined.js"
   },
   "private": true
 }
