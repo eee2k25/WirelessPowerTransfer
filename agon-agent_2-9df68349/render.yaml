@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: v2v-powershare
+    runtime: node
+    plan: free
+    buildCommand: |
+      cd agon-agent_2-9df68349
+      npm ci
+      npm run export:web
+    startCommand: |
+      cd agon-agent_2-9df68349
+      npm run server
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+    healthCheckPath: /
+    autoDeploy: true
